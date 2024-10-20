@@ -81,7 +81,34 @@ To further enhance the product, I will suggest the following improvements:
 7. **Comprehensive Error Handling**: Enhance error handling and implement a logging system for better debugging and monitoring.
 8. **Load Testing**: Conduct thorough load testing to ensure the system can handle the expected user load and identify potential bottlenecks.
 9. **API Versioning**: Implement API versioning to allow for future changes without breaking existing client integrations.
-
 10. **Dockerization**: Containerize the application for easier deployment and scaling across different environments.
 
 we can further enhance the scalability, performance, and functionality of the question rotation system, making it even more robust and adaptable to future needs.
+
+### Folder Structure
+```
+project-root/
+│
+├── src/
+│   ├── models/
+│   │   ├── question.model.js
+│   │   └── assignment.model.js
+│   │
+│   ├── controllers/
+│   │   └── assignment.controller.js
+│   │
+│   ├── services/
+│   │   └── questionAssignment.service.js
+│   │
+│   ├── config/
+│   │   ├── database.config.js
+│   │   └── redis.config.js
+│   │
+│   ├── routes/
+│   │   └── assignment.routes.js
+│   │
+│   └── app.js
+│
+├── package.json
+└── README.md
+```
