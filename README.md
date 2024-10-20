@@ -1,114 +1,112 @@
 # Dynamic Question Assignment System
 
-## Overview
+A dynamic question assignment system that distributes questions based on region and cycles. The system ensures that users in different regions receive different questions, and these questions are assigned in configurable cycles (e.g., weekly).
 
-This project implements a dynamic question rotation system that assigns questions to users based on their region and a configurable cycle duration. It's designed to handle a large number of daily active users and can scale to support millions of global users.
+## Project Overview
 
-## Task Requirements
+This project is designed to handle region-specific question assignments that rotate over configurable cycles. Each region has its own set of questions, and a new question is assigned to users in that region every cycle. The cycle duration is configurable (default is 7 days starting every Monday at 7 PM SGT). The system is optimized for scalability, capable of handling 100k daily active users and supporting millions globally.
 
-### Design & Implementation
+### Features:
+- **Region-Specific Assignment**: Different regions have distinct question sets.
+- **Configurable Cycles**: The duration of cycles can be adjusted (e.g., weekly, bi-weekly, etc.).
+- **Caching with Redis**: Questions are cached to enhance performance.
+- **Scalable Design**: Optimized to handle a large number of users efficiently.
+  
+## Architecture and Approach
 
-We have built a question rotation system with an efficient architecture to solve the problem of dynamically assigning region-specific questions to users on a cyclical basis. The system is designed to be scalable, flexible, and easily maintainable.
+The project architecture follows a modular structure with separate components for database handling, scheduling, and routing.
 
-#### Core Components:
+### Approach:
 
-1. **Question Service**: Manages the question database and provides APIs for question retrieval.
-2. **User Service**: Manages user information, including their region.
-3. **Assignment Service**: Handles the logic for assigning questions based on region and cycle.
-4. **API Gateway**: Provides a single entry point for client applications.
-5. **Database**: Stores questions, user information, and assignment history.
-6. **Cache**: Improves performance by caching frequently accessed data.
+1. **Region-Specific Questions**:
+    - Each region has its own set of questions stored in the database.
+    - Users from the same region will receive the same question for a given cycle.
 
-#### Architecture:
+2. **Cycle Management**:
+    - The cycle duration is configurable (e.g., weekly, 7 days, 14 days).
+    - A cron job is used to schedule the question assignment updates. By default, it updates every Monday at 7 PM SGT.
+    - Questions are rotated in a sequential manner for each region.
 
-The application follows a Model-View-Controller (MVC) architecture with additional Service and Config layers:
+3. **Caching with Redis**:
+    - To ensure fast responses, Redis is used to cache the question for each region during the cycle.
+    - Redis reduces the load on the database by avoiding repeated queries for the same question during a cycle.
 
-- **Models**: Define the data structures for questions and assignments.
-- **Controllers**: Handle HTTP requests and responses.
-- **Services**: Contain the core business logic for question assignment.
-- **Config**: Manage configuration for database and Redis connections.
-- **Routes**: Define the API endpoints.
+4. **Scalability**:
+    - The system is designed to handle large-scale user traffic efficiently using MongoDB for storing questions and Redis for caching.
 
-#### Implementation Details:
 
-- Built using Node.js and Express for high performance and scalability.
-- MongoDB is used for data persistence, allowing for flexible document storage and easy scaling.
-- Redis is prepared for future implementation to cache frequently accessed data.
-- The question assignment logic is encapsulated in a service, allowing for easy modifications and extensions.
-- The cycle duration is configurable, defaulting to 7 days but can be easily changed.
+## Setup Instructions
 
-### Strategy and Rationale
+### Prerequisites:
 
-Our strategy focused on creating a system that is both efficient and flexible:
+- Node.js (>=20.x)
+- MongoDB (locally or using MongoDB Atlas)
+- Redis (locally or using Redis Cloud)
 
-1. **Separation of Concerns**: By using an MVC architecture with additional layers, we've made the system modular and easy to maintain and extend.
+### Steps to Set Up:
 
-2. **Scalability**: The use of Node.js and MongoDB allows for horizontal scaling to handle increased load.
+1. **Clone the repository**:
+    ```bash
+    git clone https://github.com/ToufiqurRahmanTamkin/Dynamic-Question-Assignment-Solution.git
+    cd Dynamic-Question-Assignment-Solution
+    ```
 
-3. **Flexibility**: The configurable cycle duration and region-based question assignment allow for easy adaptation to different business requirements.
+2. **Install dependencies**:
+    ```bash
+    npm install
+    ```
 
-4. **Performance**: By preparing for Redis integration, we've laid the groundwork for high-performance caching to reduce database load.
+3. **Configure environment variables**:
+    Create a `.env` file in the project root with the following content:
+    ```bash
+    MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/<dbname>?retryWrites=true&w=majority
+    REDIS_URL=redis://<your_redis_url>
+    PORT=5000
+    ```
 
-5. **API-First Design**: The system is built around a clear API, making it easy to integrate with various front-end applications or other services.
+4. **Start MongoDB and Redis**:
+    Ensure MongoDB and Redis are running locally or accessible through cloud services.
 
-### Pros and Cons
+5. **Run the app**:
+    - In development mode:
+      ```bash
+      npm run dev
+      ```
+    - In production mode:
+      ```bash
+      npm start
+      ```
 
-#### Pros:
+6. **Access the API**:
+    - Fetch the question for a specific region:
+      ```http
+      GET /api/questions/:region
+      ```
+    - Example:
+      ```http
+      GET http://localhost:5000/api/questions/Singapore
+      ```
 
-1. **Scalability**: Can handle 100k DAU and scale to millions of users.
-2. **Flexibility**: Easy to configure cycle duration and add new regions or question sets.
-3. **Maintainability**: Clear separation of concerns makes the code easy to understand and modify.
-4. **Performance**: Prepared for high-performance caching with Redis.
-5. **API-Driven**: Easy to integrate with various client applications.
+## Pros and Cons of the Solution
 
-#### Cons:
+### Pros:
+- **Region-Specific Assignment**: The system handles region-based question assignment efficiently, ensuring users in different regions receive their respective questions.
+- **Configurable Cycles**: Flexibility to set the cycle duration (e.g., weekly, daily) allows adaptability to different use cases.
+- **Scalability**: The use of Redis caching ensures that the system can handle a high volume of requests without overloading the database.
+- **Modular Structure**: The codebase is well-organized into modules, making it easy to maintain and extend.
+- **Efficiency**: Caching and scheduled updates using cron jobs reduce redundant database calls and optimize performance.
 
-1. **Complexity**: The multi-layered architecture might be overkill for very simple use cases.
-2. **Learning Curve**: New developers might need time to understand the full architecture.
-3. **Database Dependency**: Heavy reliance on MongoDB might make it challenging to switch databases in the future.
-4. **Asynchronous Nature**: The asynchronous nature of Node.js can make certain types of processing (like heavy computations) less efficient.
+### Cons:
+- **Complexity in Redis Management**: Using Redis requires additional infrastructure management, and handling cache invalidation correctly adds complexity.
+- **Database Dependency**: Although MongoDB is used here, scaling databases can become a challenge for very large datasets (e.g., if there are millions of questions and users globally).
+- **Single Point of Failure for Scheduler**: The cron job is responsible for updating the cycle, and if it fails, the entire question rotation may not work as expected. This can be mitigated by using distributed cron jobs or external scheduling services.
 
-### Potential Improvements
+## Future Improvements
 
-To further enhance the product, I will suggest the following improvements:
+- **Distributed Scheduler**: Consider using a more robust scheduler (e.g., Redis-based distributed job queues) to handle scheduling in case of server failure.
+- **Rate Limiting**: Implement rate limiting on the API to prevent abuse and ensure consistent performance.
+- **Question Personalization**: Add support for personalizing questions based on user activity or preferences within a region.
+- **Monitoring**: Integrate logging and monitoring solutions to track question rotation performance and any potential issues.
+  
 
-1. **Implement Redis Caching**: Fully implement Redis to cache frequently accessed data like current cycle and region-specific question sets.
-2. **User Authentication**: Add a robust user authentication system to ensure secure access to questions.
-3. **Advanced Question Selection**: Implement more sophisticated algorithms for question selection, possibly incorporating user performance or preferences.
-4. **Localization**: Add support for multiple languages to cater to a global user base.
-5. **Analytics Service**: Implement a service to track user engagement and question effectiveness, providing valuable insights for content improvement.
-6. **Feature Flags**: Implement a feature flag system for the gradual rollout of new features or question sets.
-7. **Comprehensive Error Handling**: Enhance error handling and implement a logging system for better debugging and monitoring.
-8. **Load Testing**: Conduct thorough load testing to ensure the system can handle the expected user load and identify potential bottlenecks.
-9. **API Versioning**: Implement API versioning to allow for future changes without breaking existing client integrations.
-10. **Dockerization**: Containerize the application for easier deployment and scaling across different environments.
 
-we can further enhance the scalability, performance, and functionality of the question rotation system, making it even more robust and adaptable to future needs.
-
-### Folder Structure
-```
-project-root/
-│
-├── src/
-│   ├── models/
-│   │   ├── question.model.js
-│   │   └── assignment.model.js
-│   │
-│   ├── controllers/
-│   │   └── assignment.controller.js
-│   │
-│   ├── services/
-│   │   └── questionAssignment.service.js
-│   │
-│   ├── config/
-│   │   ├── database.config.js
-│   │   └── redis.config.js
-│   │
-│   ├── routes/
-│   │   └── assignment.routes.js
-│   │
-│   └── app.js
-│
-├── package.json
-└── README.md
-```
